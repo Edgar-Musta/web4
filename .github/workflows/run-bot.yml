@@ -9,11 +9,16 @@ on:
     types:
       - restart_bot
 
+# Enforces only one running bot instance at a time across the repository
+concurrency:
+  group: telegram-downloader-bot
+  cancel-in-progress: true
+
 jobs:
   run-bot:
     name: Run Bot
     runs-on: ubuntu-latest
-    timeout-minutes: 360   # GitHub's hosted-runner limit
+    timeout-minutes: 360 # GitHub's hosted-runner limit
 
     env:
       # Telegram API credentials (from https://my.telegram.org/apps)
@@ -21,25 +26,25 @@ jobs:
       API_HASH: ${{ secrets.API_HASH }}
       # Bot token from @BotFather
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-
+      
       # Owner / admin / force‑sub settings
       #OWNER_IDS: ${{ secrets.OWNER_IDS }}
       FSUB_CHANNELS: ${{ secrets.FSUB_CHANNELS }}
-
+      
       # GitHub Actions watchdog – the bot uses these to trigger a new
       # repository_dispatch after ~5h45m (so the workflow keeps running)
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       GITHUB_REPOSITORY: ${{ github.repository }}
-
+      
       # Per‑user session directory (used by TDLib)
       SESSIONS_DIR: sessions
-
+      
       # R2 / Cloudflare storage (advanced version)
       R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
-
+      
       # Optional performance / access limits (uncomment and set as needed)
       MAX_CONCURRENT_DOWNLOADS: ${{ secrets.MAX_CONCURRENT_DOWNLOADS }}
       MAX_CONCURRENT_UPLOADS: ${{ secrets.MAX_CONCURRENT_UPLOADS }}
