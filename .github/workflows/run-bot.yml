@@ -23,7 +23,7 @@ jobs:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
 
       # Owner / admin / force‑sub settings
-      OWNER_IDS: ${{ secrets.OWNER_IDS }}
+      #OWNER_IDS: ${{ secrets.OWNER_IDS }}
       FSUB_CHANNELS: ${{ secrets.FSUB_CHANNELS }}
 
       # GitHub Actions watchdog – the bot uses these to trigger a new
@@ -41,12 +41,12 @@ jobs:
       R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
 
       # Optional performance / access limits (uncomment and set as needed)
-      # MAX_CONCURRENT_DOWNLOADS: ${{ vars.MAX_CONCURRENT_DOWNLOADS }}
-      # MAX_CONCURRENT_UPLOADS: ${{ vars.MAX_CONCURRENT_UPLOADS }}
-      # MAX_FILE_SIZE_MB: ${{ vars.MAX_FILE_SIZE_MB }}
-      # ALLOWED_USER_IDS: ${{ secrets.ALLOWED_USER_IDS }}
-      # ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
-      # FORCE_SUB_CHANNELS: ${{ vars.FORCE_SUB_CHANNELS }}
+      MAX_CONCURRENT_DOWNLOADS: ${{ secrets.MAX_CONCURRENT_DOWNLOADS }}
+      MAX_CONCURRENT_UPLOADS: ${{ secrets.MAX_CONCURRENT_UPLOADS }}
+      MAX_FILE_SIZE_MB: ${{ secrets.MAX_FILE_SIZE_MB }}
+      #ALLOWED_USER_IDS: ${{ secrets.ALLOWED_USER_IDS }}
+      ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
+      FORCE_SUB_CHANNELS: ${{ secrets.FORCE_SUB_CHANNELS }}
 
     steps:
       - name: Checkout repository
