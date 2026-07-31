@@ -3,3 +3,4 @@ tgcrypto
 aiohttp
 boto3
 python-dotenv
+brotli
