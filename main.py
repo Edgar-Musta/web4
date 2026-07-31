@@ -127,8 +127,20 @@ DOMAIN_HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
-        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Encoding": "gzip, deflate",
         "Referer": "https://reelplexi.com/",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+    },
+    "filimu.online": {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "en-US,en;q=0.9,it;q=0.8",
+        "Accept-Encoding": "gzip, deflate",
+        "Referer": "https://filimu.online/",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-Site": "same-origin",
@@ -139,7 +151,7 @@ DOMAIN_HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
-        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Encoding": "gzip, deflate",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
         "Upgrade-Insecure-Requests": "1",
@@ -196,7 +208,6 @@ def presigned_r2_url(key: str) -> str:
 class MediaExtractor:
     """Extract direct media URLs from HTML pages, JavaScript, and meta tags."""
 
-    @staticmethod
     @staticmethod
     def extract_from_html(html: str, base_url: str) -> list[dict]:
         """Extract all candidate media URLs from HTML content."""
@@ -907,13 +918,15 @@ async def download_file(url: str, status_message, user_id: int, headers: dict | 
         session_kwargs = {"timeout": timeout, "headers": headers}
         if cookie_jar is not None:
             session_kwargs["cookie_jar"] = cookie_jar
-        async with aiohttp.ClientSession(**session_kwargs) as session:
-            async with session.get(current_url, allow_redirects=True, ssl=False) as resp:
-                resp.raise_for_status()
 
-                content_type = resp.headers.get("Content-Type", "")
+        try:
+            async with aiohttp.ClientSession(**session_kwargs) as session:
+                async with session.get(current_url, allow_redirects=True, ssl=False) as resp:
+                    resp.raise_for_status()
 
-                # If we got HTML, try to extract a better URL from it
+                    content_type = resp.headers.get("Content-Type", "")
+
+                    # If we got HTML, try to extract a better URL from it
                 if MediaExtractor.is_html_response(content_type, current_url):
                     html = await resp.text()
                     media_links = MediaExtractor.extract_from_html(html, current_url)
@@ -986,6 +999,18 @@ async def download_file(url: str, status_message, user_id: int, headers: dict | 
                             last_update = now
 
                 return local_path, filename
+
+        except (aiohttp.ClientPayloadError, aiohttp.ContentEncodingError) as e:
+            logger.warning("Decompression/payload error for %s: %s", current_url, e)
+            if headers.get("Accept-Encoding", "") != "identity":
+                headers = headers.copy()
+                headers["Accept-Encoding"] = "identity"
+                await safe_edit(
+                    status_message,
+                    "⚠️ *Server sent unreadable compressed data. Retrying without compression...*"
+                )
+                continue
+            raise
 
     raise RuntimeError(f"Exceeded maximum HTML retries ({max_html_retries}). Could not find a direct file link.")
 
