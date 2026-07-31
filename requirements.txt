@@ -4,3 +4,4 @@ aiohttp
 boto3
 python-dotenv
 brotli
+brotlipy
