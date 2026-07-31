@@ -29,6 +29,10 @@ from html.parser import HTMLParser
 from urllib.parse import parse_qs, unquote, urlparse, urlencode, urljoin, urlunparse
 
 import aiohttp
+try:
+    from aiohttp.http_exceptions import ContentEncodingError
+except ImportError:
+    ContentEncodingError = aiohttp.ClientPayloadError
 import boto3
 from botocore.config import Config as BotoConfig
 from dotenv import load_dotenv
@@ -1000,7 +1004,7 @@ async def download_file(url: str, status_message, user_id: int, headers: dict | 
 
                 return local_path, filename
 
-        except (aiohttp.ClientPayloadError, aiohttp.ContentEncodingError) as e:
+        except (aiohttp.ClientPayloadError, ContentEncodingError) as e:
             logger.warning("Decompression/payload error for %s: %s", current_url, e)
             if headers.get("Accept-Encoding", "") != "identity":
                 headers = headers.copy()
@@ -1126,11 +1130,13 @@ HELP_TEXT = (
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     await message.reply_text(START_TEXT, parse_mode=ParseMode.MARKDOWN)
+    message.stop_propagation()
 
 
 @app.on_message(filters.command("help") & filters.private)
 async def help_cmd(client, message):
     await message.reply_text(HELP_TEXT, parse_mode=ParseMode.MARKDOWN)
+    message.stop_propagation()
 
 
 @app.on_message(filters.command("status") & filters.private)
@@ -1156,6 +1162,7 @@ async def status_cmd(client, message):
         else:
             text += "\n✅ You're free to start a download."
     await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+    message.stop_propagation()
 
 
 @app.on_message(filters.command("queue") & filters.private)
@@ -1174,6 +1181,7 @@ async def queue_cmd(client, message):
             f"• {info['label']} — *{info['stage']}* — {mins}m {secs}s\n  {info['filename'] or info['url']}"
         )
     await message.reply_text("\n".join(lines), parse_mode=ParseMode.MARKDOWN)
+    message.stop_propagation()
 
 
 @app.on_message(filters.command("cancel") & filters.private)
@@ -1184,6 +1192,7 @@ async def cancel_cmd(client, message):
         await message.reply_text("🛑 Cancelling your active job...")
     else:
         await message.reply_text("You don't have an active job to cancel.")
+    message.stop_propagation()
 
 
 @app.on_message(filters.command("audit") & filters.private)
@@ -1211,6 +1220,7 @@ async def audit_cmd(client, message):
         await status.edit_text(text, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         await status.edit_text(f"❌ Audit failed: {e}", parse_mode=ParseMode.MARKDOWN)
+    message.stop_propagation()
 
 
 @app.on_callback_query(filters.regex("^check_sub$"))
@@ -1243,6 +1253,11 @@ async def handle_links(client, message):
             return
 
     url = message.text.strip()
+
+    # Ignore any message that looks like a command (safety net)
+    if url.startswith("/"):
+        return
+
     if not (url.startswith("http://") or url.startswith("https://")):
         await message.reply_text("Please send a valid HTTP/HTTPS download link.")
         return
