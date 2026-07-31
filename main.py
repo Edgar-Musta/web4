@@ -1064,17 +1064,16 @@ async def upload_and_send(client, message, status_message, local_path: str, file
 # Pyrogram handlers
 # --------------------------------------------------------------------------
 
-app = Client("video_downloader_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+app = Client("video_downloader_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, sleep_threshold=15)
 
 START_TEXT = (
     "👋 *Advanced Stream Downloader*\n\n"
     "Send me a link and I'll:\n"
-    "1️⃣ *Audit* — Extract direct CDN URLs from JWT tokens, APIs & HTML pages\n"
-    "2️⃣ *Resolve* — Follow redirects and bypass simple blocks\n"
-    "3️⃣ *Parse* — Scrape HTML for embedded video tags, scripts & meta tags\n"
-    "4️⃣ *Download* — Chunked parallel downloads for large files\n"
-    "5️⃣ *Stream* — HLS/M3U8 support via ffmpeg\n"
-    "6️⃣ *Deliver* — Upload to Telegram with cloud backup\n\n"
+    "1️⃣ *Audit* \n"
+    "2️⃣ *Resolve* \n"
+    "3️⃣ *Parse* \n"
+    "4️⃣ *Download* \n"
+    "5️⃣ *Upload* \n"
     + (f"• Max file size: {MAX_FILE_SIZE_MB} MB\n" if MAX_FILE_SIZE_MB else "• No file size limit\n")
     + f"• Up to {MAX_CONCURRENT_DOWNLOADS} downloads and {MAX_CONCURRENT_UPLOADS} uploads at once\n"
     + f"• Chunked downloads: {MAX_CHUNK_WORKERS}x parallel, {CHUNK_SIZE_BYTES // 1024 // 1024} MB chunks\n"
@@ -1084,19 +1083,18 @@ START_TEXT = (
 
 HELP_TEXT = (
     "*How to use this bot*\n\n"
-    "1. Send any HTTP/HTTPS link (direct, streaming, player page, or API endpoint).\n"
-    "2. I'll automatically extract the real direct URL from the page.\n"
-    "3. Large files use chunked parallel downloading.\n"
-    "4. HLS/M3U8 streams are merged to MP4 via ffmpeg.\n"
-    "5. Everything is backed up to R2 during transfer.\n\n"
+    "1. Send any HTTP/HTTPS link\n"
+    "2. I'll automatically extract the real direct link\n"
+    "3. Large files use chunked parallel downloading\n"
+    "4. HLS/M3U8 streams are merged to MP4 via ffmpeg\n"
+    "5. Everything is backed up\n\n"
     "*Commands*\n"
     "/status — see queue and your cooldown status\n"
     "/queue — active jobs (admins only)\n"
     "/cancel — cancel your job\n"
     "/audit <url> — show stream audit log without downloading\n"
     "/help — show this message\n\n"
-    "If the site returns an HTML page, the bot will try to find the real video URL inside it."
-    + (f"\n\nNon-admins: 1 download every {COOLDOWN_MINUTES} minutes." if COOLDOWN_SECONDS else "")
+    + (f"\n\n1 download every {COOLDOWN_MINUTES} minutes." if COOLDOWN_SECONDS else "")
 )
 
 
